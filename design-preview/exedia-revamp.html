@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exedia Redesign Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a quiet gallery wall. Work sits on a cool paper ground, every tile carries its maker's name, proof of process is a stamp, not a sticker. */
+:root{
+  --paper:#eef0f2;
+  --surface:#ffffff;
+  --ink:#15181d;
+  --muted:#5b6370;
+  --line:#d5d9df;
+  --accent:#2340d9;
+  --accent-ink:#ffffff;
+  --stamp:#c2410c;
+  --ok:#17803d;
+  --warn:#a15c00;
+  --shadow:0 1px 2px rgba(21,24,29,.06),0 8px 24px rgba(21,24,29,.08);
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --r:10px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111317;--surface:#1a1d23;--ink:#eceef2;--muted:#9aa3b1;--line:#2c313a;
+    --accent:#7d93ff;--accent-ink:#0d1020;--stamp:#fb8a4c;--ok:#4ade80;--warn:#f5b44a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111317;--surface:#1a1d23;--ink:#eceef2;--muted:#9aa3b1;--line:#2c313a;
+  --accent:#7d93ff;--accent-ink:#0d1020;--stamp:#fb8a4c;--ok:#4ade80;--warn:#f5b44a;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.02em}
+.muted{color:var(--muted)}
+
+/* Top bar */
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1320px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.brand-mark span{width:12px;height:12px;border:2.5px solid var(--paper);border-radius:50%}
+.brand b{font-family:var(--display);font-size:20px}
+.nav{display:flex;gap:4px}
+.nav a{padding:7px 12px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500}
+.nav a[aria-current="page"]{background:var(--ink);color:var(--paper)}
+.nav a:hover:not([aria-current="page"]){color:var(--ink);background:var(--line)}
+.search{flex:1;max-width:520px;margin-left:auto;position:relative}
+.search input{width:100%;padding:9px 14px 9px 36px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px;flex:none}
+.me{background:var(--accent);color:var(--accent-ink)}
+
+main{max-width:1320px;margin:0 auto;padding:20px}
+.view{display:none}
+.view.on{display:block}
+
+/* Feed controls */
+.controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-bottom:16px}
+.tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{border:0;background:none;padding:6px 14px;border-radius:999px;color:var(--muted);font-weight:500}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.swatches{display:flex;align-items:center;gap:6px}
+.sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:500}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.status{font-size:13px;color:var(--muted);margin-left:auto}
+
+.intro{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:end;margin:8px 0 22px}
+.intro h1{font-size:clamp(28px,4vw,44px);line-height:1.05}
+.intro p{margin:0;color:var(--muted);max-width:52ch}
+
+/* Masonry */
+.wall{column-count:4;column-gap:16px}
+@media (max-width:1100px){.wall{column-count:3}}
+@media (max-width:760px){.wall{column-count:2;column-gap:10px}.intro{grid-template-columns:1fr}}
+.tile{break-inside:avoid;margin:0 0 16px;background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);border:0;padding:0;width:100%;text-align:left;display:block;position:relative}
+.tile canvas{display:block;width:100%;height:auto}
+.tile .meta{padding:10px 12px 12px;display:grid;gap:4px}
+.tile .t{font-weight:600;line-height:1.3}
+.byline{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.byline .avatar{width:22px;height:22px;font-size:10px}
+.badges{position:absolute;top:8px;left:8px;display:flex;gap:6px;flex-wrap:wrap}
+.badge{font:500 11px/1 var(--mono);padding:5px 7px;border-radius:5px;background:rgba(255,255,255,.92);color:#15181d;display:inline-flex;gap:5px;align-items:center}
+.badge i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.b-proc i{background:#c2410c}
+.b-cred i{background:#17803d}
+.b-ai i{background:#a15c00}
+.tile:hover{transform:translateY(-2px)}
+@media (prefers-reduced-motion:no-preference){.tile{transition:transform .15s ease}}
+.caught{break-inside:avoid;border:1.5px dashed var(--line);border-radius:var(--r);padding:22px 18px;margin:0 0 16px;text-align:center}
+.caught h3{font-size:18px;margin-bottom:6px}
+.caught p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:999px;font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ink{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+/* Detail sheet: bottom sheet on phones, centered panel on wider screens */
+.scrim{position:fixed;inset:0;background:rgba(10,12,16,.55);z-index:50;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;z-index:60;background:var(--surface);display:none;overflow:hidden;flex-direction:column;
+  inset:auto 0 0 0;max-height:92%;border-radius:16px 16px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+.sheet.on{display:flex}
+@media (min-width:860px){.sheet{inset:4% 50% auto auto;transform:translateX(50%);width:min(1080px,94vw);max-height:92%;border-radius:16px}}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.x{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:18px;line-height:1}
+.sheet-body{overflow-y:auto;display:grid;grid-template-columns:1.15fr 1fr}
+@media (max-width:859px){.sheet-body{grid-template-columns:1fr}}
+.stage{background:var(--paper);padding:18px;display:grid;gap:12px;align-content:start}
+.stage canvas.big{width:100%;height:auto;border-radius:8px;box-shadow:var(--shadow)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.step{border:1.5px solid transparent;border-radius:7px;padding:0;background:none;display:grid;gap:4px;text-align:left}
+.step canvas{width:100%;height:auto;border-radius:6px;display:block}
+.step span{font-size:11px;color:var(--muted);padding:0 2px 2px}
+.step[aria-pressed="true"]{border-color:var(--ink)}
+.info{padding:20px 22px;display:grid;gap:18px;align-content:start}
+.info h2{font-size:28px;line-height:1.1}
+.sect h3{font:600 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px}
+.chain{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.chain li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;position:relative;padding-bottom:12px}
+.chain li:not(:last-child)::before{content:"";position:absolute;left:10px;top:20px;bottom:0;width:2px;background:var(--line)}
+.dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);background:var(--surface);display:block}
+.chain li:first-child .dot{background:var(--ink)}
+.pal{display:flex;border-radius:8px;overflow:hidden;height:38px}
+.pal button{flex:1;border:0;position:relative}
+.pal button span{position:absolute;inset:auto 4px 3px auto;font:10px var(--mono);background:rgba(255,255,255,.85);color:#15181d;padding:1px 4px;border-radius:3px;opacity:0}
+.pal button:hover span,.pal button:focus-visible span{opacity:1}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:14px}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.proof{border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:4px;font-size:14px}
+.proof strong{display:flex;gap:8px;align-items:center}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;z-index:80;font-size:14px;display:none}
+.toast.on{display:block}
+
+/* Trails */
+.trails{display:grid;grid-template-columns:280px 1fr;gap:24px}
+@media (max-width:860px){.trails{grid-template-columns:1fr}}
+.trail-list{display:grid;gap:8px;align-content:start}
+.trail-pick{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px;text-align:left;display:grid;gap:4px}
+.trail-pick[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--ink)}
+.trail-pick b{font-family:var(--display);font-size:17px}
+.trail-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:end;margin-bottom:18px}
+.trail-head h2{font-size:32px}
+.trail-head p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.stack{display:flex}
+.stack .avatar{border:2px solid var(--paper);margin-left:-8px;width:30px;height:30px;font-size:11px}
+.stack .avatar:first-child{margin-left:0}
+.path{display:grid;gap:0;max-width:760px}
+.stop{display:grid;grid-template-columns:44px 200px 1fr;gap:16px;align-items:start;padding:16px 0;border-top:1px solid var(--line)}
+@media (max-width:560px){.stop{grid-template-columns:32px 1fr}.stop .note{grid-column:2}}
+.stop .n{font:500 13px var(--mono);color:var(--muted);padding-top:2px}
+.stop canvas{width:100%;height:auto;border-radius:8px;box-shadow:var(--shadow);cursor:pointer}
+.note h4{margin:0 0 4px;font-size:16px}
+.note p{margin:0;color:var(--muted)}
+.note .who{font-size:12px;margin-top:8px}
+
+/* Post */
+.post{display:grid;grid-template-columns:1fr 340px;gap:28px}
+@media (max-width:900px){.post{grid-template-columns:1fr}}
+.post h1{font-size:34px;margin-bottom:6px}
+form{display:grid;gap:18px}
+fieldset{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:16px 18px;margin:0;display:grid;gap:12px}
+legend{font-family:var(--display);font-weight:700;font-size:17px;padding:0 6px}
+label{font-weight:500;font-size:14px;display:grid;gap:6px}
+input[type=text],input[type=url],textarea,select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+textarea{min-height:70px;resize:vertical}
+.hint{font-size:13px;color:var(--muted);font-weight:400}
+.radios{display:grid;gap:8px}
+.radio{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-weight:400}
+.radio:has(input:checked){border-color:var(--ink)}
+.radio b{display:block;font-weight:600}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:16px;text-align:center;color:var(--muted);font-size:14px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:6px}
+.preview{position:sticky;top:80px;align-self:start;display:grid;gap:12px}
+.preview .tile{pointer-events:none}
+.ph{aspect-ratio:4/5;background:repeating-linear-gradient(45deg,var(--paper),var(--paper) 10px,var(--line) 10px,var(--line) 11px);display:grid;place-items:center;color:var(--muted);font-size:13px}
+.ph img{width:100%;height:100%;object-fit:cover}
+.checks{list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:14px}
+.checks li::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;background:var(--line)}
+.checks li.done::before{background:var(--ok)}
+
+/* Plan */
+.plan{max-width:900px}
+.plan h1{font-size:clamp(30px,4.5vw,48px);line-height:1.05;margin-bottom:12px}
+.plan .lede{font-size:18px;color:var(--muted);max-width:62ch;margin:0 0 28px}
+.plan h2{font-size:24px;margin:34px 0 12px}
+.plan p,.plan li{max-width:68ch}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+.sev{font:500 11px var(--mono);padding:3px 7px;border-radius:4px;white-space:nowrap}
+.sev.hi{background:color-mix(in srgb,var(--stamp) 18%,transparent);color:var(--stamp)}
+.sev.md{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.sev.new{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;background:var(--surface)}
+.card h3{font-size:16px;margin-bottom:8px}
+.card ul{margin:0;padding-left:18px;color:var(--muted)}
+.foot{margin-top:40px;font-size:13px;color:var(--muted)}
+
+@media (max-width:640px){
+  .top-in{flex-wrap:wrap;padding:10px 16px}
+  .search{order:3;flex-basis:100%;max-width:none}
+  .nav a{padding:6px 9px;font-size:14px}
+  main{padding:16px}
+  .status{margin-left:0;flex-basis:100%}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#discover" aria-label="Exedia home"><span class="brand-mark"><span></span></span><b>Exedia</b></a>
+    <nav class="nav" aria-label="Main">
+      <a href="#discover" data-view="discover">Discover</a>
+      <a href="#trails" data-view="trails">Trails</a>
+      <a href="#share" data-view="share">Share</a>
+      <a href="#plan" data-view="plan">The plan</a>
+    </nav>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search work, makers, or materials like gouache" aria-label="Search">
+    </div>
+    <span class="avatar me" title="You">AC</span>
+  </div>
+</header>
+
+<main>
+<!-- DISCOVER -->
+<section class="view" id="v-discover" aria-labelledby="h-discover">
+  <div class="intro">
+    <h1 id="h-discover">Work made by people, with their names on it.</h1>
+    <p>Every piece shows who made it and how. Saves keep the maker's credit attached, and the feed ends when you've seen everything new.</p>
+  </div>
+  <div class="controls">
+    <div class="tabs" role="group" aria-label="Feed">
+      <button type="button" data-feed="following" aria-pressed="true">Following</button>
+      <button type="button" data-feed="edit" aria-pressed="false">Today's edit</button>
+      <button type="button" data-feed="all" aria-pressed="false">Everything</button>
+    </div>
+    <div class="row">
+      <button type="button" class="chip" id="f-hand" aria-pressed="false">Process shown</button>
+      <button type="button" class="chip" id="f-noai" aria-pressed="false">Hide AI-assisted</button>
+    </div>
+    <div class="swatches" role="group" aria-label="Search by color" id="swatches"></div>
+    <span class="status" id="status" aria-live="polite"></span>
+  </div>
+  <div class="wall" id="wall"></div>
+</section>
+
+<!-- TRAILS -->
+<section class="view" id="v-trails" aria-labelledby="h-trails">
+  <div class="trails">
+    <div class="trail-list" id="trail-list" role="group" aria-label="Your trails"></div>
+    <div id="trail-body"></div>
+  </div>
+</section>
+
+<!-- SHARE -->
+<section class="view" id="v-share" aria-labelledby="h-share">
+  <div class="post">
+    <div>
+      <h1 id="h-share">Share a piece</h1>
+      <p class="muted" style="margin:0 0 20px;max-width:60ch">Process shots are optional, but work that shows them gets the Process shown stamp and can appear in Today's edit.</p>
+      <form id="post-form" novalidate>
+        <fieldset>
+          <legend>The finished piece</legend>
+          <label for="p-file">Image<span class="hint">JPG, PNG or WebP. If the file has Content Credentials, we read and show them.</span>
+            <input id="p-file" type="file" accept="image/*">
+          </label>
+          <label for="p-title">Title<input id="p-title" type="text" placeholder="Harbour at 6am"></label>
+          <label for="p-about">A line about it<textarea id="p-about" placeholder="What were you trying to get right?"></textarea></label>
+        </fieldset>
+        <fieldset>
+          <legend>How you got there</legend>
+          <label for="p-steps">Process shots<span class="hint">Sketches, early passes, a photo of your table. Up to 6.</span>
+            <input id="p-steps" type="file" accept="image/*" multiple>
+          </label>
+          <div class="thumbs" id="p-thumbs"></div>
+          <label for="p-medium">Medium and tools<input id="p-medium" type="text" placeholder="Gouache on cold press, Procreate for cleanup"></label>
+        </fieldset>
+        <fieldset>
+          <legend>AI use</legend>
+          <div class="radios" role="radiogroup" aria-label="AI use">
+            <label class="radio" for="ai-none"><input type="radio" name="ai" id="ai-none" value="none" checked><span><b>None</b><span class="hint">Made without generative tools.</span></span></label>
+            <label class="radio" for="ai-assist"><input type="radio" name="ai" id="ai-assist" value="assist"><span><b>Assisted</b><span class="hint">You made it, and a tool helped with upscaling, cleanup or a background fill. It gets a visible label.</span></span></label>
+            <label class="radio" for="ai-gen"><input type="radio" name="ai" id="ai-gen" value="gen"><span><b>Mostly generated</b><span class="hint">Exedia doesn't host these. You can still save them privately.</span></span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Credit</legend>
+          <div class="radios" role="radiogroup" aria-label="Who made it">
+            <label class="radio" for="own-me"><input type="radio" name="own" id="own-me" value="me" checked><span><b>I made this</b></span></label>
+            <label class="radio" for="own-other"><input type="radio" name="own" id="own-other" value="other"><span><b>Someone else made it</b><span class="hint">Add where you found it. We link the maker on every save.</span></span></label>
+          </div>
+          <label for="p-src" id="src-wrap" hidden>Original link<input id="p-src" type="url" placeholder="https://"></label>
+          <label for="p-commission">Open for commissions?
+            <select id="p-commission"><option>Not right now</option><option>Yes, message me</option></select>
+          </label>
+        </fieldset>
+        <div class="row"><button class="btn primary" type="submit">Post to Exedia</button><button class="btn" type="reset">Clear</button></div>
+        <p class="hint" id="post-msg" aria-live="polite"></p>
+      </form>
+    </div>
+    <aside class="preview" aria-label="Preview">
+      <span class="mono muted">How it will look</span>
+      <div class="tile" id="pv">
+        <div class="ph" id="pv-img">Your image shows here</div>
+        <div class="badges" id="pv-badges"></div>
+        <div class="meta"><span class="t" id="pv-title">Untitled</span><span class="byline"><span class="avatar me">AC</span>You</span></div>
+      </div>
+      <ul class="checks" id="pv-checks"></ul>
+    </aside>
+  </div>
+</section>
+
+<!-- PLAN -->
+<section class="view" id="v-plan" aria-labelledby="h-plan">
+  <article class="plan">
+    <span class="mono muted">Proposal for Exedia Platforms</span>
+    <h1 id="h-plan">Make Exedia the place to find human-made work</h1>
+    <p class="lede">Today Exedia is a Pinterest-style board app. Pinterest already does that at a scale of hundreds of millions of users, so copying it won't win. What Pinterest users complain about most is AI-generated filler and work that loses its maker's name once it gets reposted. Exedia can be built around fixing exactly that.</p>
+
+    <h2>Why this direction</h2>
+    <p>Through 2025 and into 2026, Pinterest users reported feeds full of AI images that link to spam sites. Pinterest responded with an "AI modified" label and a See Fewer control, but creators say hand-drawn work still gets tagged by mistake. Smaller tools like Are.na, Savee and Cosmos have grown by being calmer and curated by people. None of them make proof of process and credit the center of the product.</p>
+
+    <div class="compare">
+      <div class="card"><h3>Exedia today</h3><ul>
+        <li>Generic save-an-image boards</li>
+        <li>Endless feed with no ordering logic</li>
+        <li>Credit is a small avatar that disappears on repost</li>
+        <li>Admin check runs in the browser</li>
+      </ul></div>
+      <div class="card"><h3>Exedia after the revamp</h3><ul>
+        <li>Every piece shows who made it and how</li>
+        <li>Following feed that ends, plus a daily edit picked by people</li>
+        <li>Credit chain follows the work through every save</li>
+        <li>All writes go through a server, never the browser</li>
+      </ul></div>
+    </div>
+
+    <h2>New features in this preview</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Feature</th><th>What it does</th><th>Try it</th></tr></thead>
+      <tbody>
+        <tr><td>Process stamp</td><td>Makers attach sketches and early passes. Viewers scrub through them.</td><td>Open any tile with the orange dot</td></tr>
+        <tr><td>Content Credentials</td><td>Reads C2PA data in uploads and shows the signed capture or edit history</td><td>Tiles with the green dot</td></tr>
+        <tr><td>Honest AI label</td><td>Makers declare assisted use. Viewers can hide it. Fully generated work isn't hosted.</td><td>Hide AI-assisted toggle</td></tr>
+        <tr><td>Credit chain</td><td>Shows the original maker and each save between them and you</td><td>Detail panel, Credit section</td></tr>
+        <tr><td>Color search</td><td>Filters the wall by palette, using colors pulled from each piece</td><td>Swatches above the wall, or tap a palette color</td></tr>
+        <tr><td>Calm feed</td><td>Following is in time order and stops with a caught-up card</td><td>Scroll to the end of Following</td></tr>
+        <tr><td>Trails</td><td>Boards become ordered paths with notes between pieces, shared with collaborators</td><td>Trails tab</td></tr>
+        <tr><td>Commission flag</td><td>Makers mark themselves open for work. Viewers can message them directly.</td><td>Detail panel</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Problems found in the current code</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Issue</th><th>Where</th><th>Risk</th></tr></thead>
+      <tbody>
+        <tr><td>Sanity editor token ships in the browser bundle</td><td><code>src/client.js</code>, <code>REACT_APP_SANITY_EDITOR_TOKEN</code></td><td><span class="sev hi">Critical</span></td></tr>
+        <tr><td>Admin check compares a public env value in the browser and logs it to the console</td><td><code>util/data.js</code>, <code>checkAdm</code></td><td><span class="sev hi">High</span></td></tr>
+        <tr><td>Search text is pasted straight into a GROQ query</td><td><code>util/data.js</code>, <code>searchQuery</code></td><td><span class="sev md">Medium</span></td></tr>
+        <tr><td>Any signed-in user can delete any pin, since the browser holds a write token</td><td><code>Pin.jsx</code>, <code>deletePin</code></td><td><span class="sev hi">High</span></td></tr>
+        <tr><td>Save and delete reload the whole page</td><td><code>Pin.jsx</code></td><td><span class="sev md">UX</span></td></tr>
+        <tr><td>Create React App is no longer maintained, and Sanity Studio v2 is past end of life</td><td><code>package.json</code>, <code>shareme_backend</code></td><td><span class="sev md">Upkeep</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Suggested rebuild</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>App</td><td>Next.js with server actions</td><td>Tokens stay on the server, and image pages render fast for sharing</td></tr>
+        <tr><td>Data and auth</td><td>Supabase Postgres, row level security, Google sign-in</td><td>Owners can only edit their own work, enforced in the database</td></tr>
+        <tr><td>Images</td><td>Supabase Storage plus resized variants</td><td>Cheap at small scale and fine for a launch</td></tr>
+        <tr><td>Provenance</td><td>The open source C2PA JavaScript SDK, run on upload</td><td>Reads Content Credentials without a paid service</td></tr>
+        <tr><td>Palette</td><td>Color quantization on upload, stored as columns</td><td>Color search becomes a plain indexed query</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Edge cases to plan for</h2>
+    <ul>
+      <li>People will lie on the AI form. Pair the declaration with reports from viewers and a review queue, and treat process shots as the stronger signal.</li>
+      <li>Most phone photos and screenshots carry no Content Credentials. A missing credential must never read as a sign of guilt.</li>
+      <li>Process shots can be faked as well. The stamp means the maker showed their steps. It doesn't prove anything beyond that, and the copy should say so.</li>
+      <li>Reposts of work from other sites need a source link, and a takedown path for makers who want their work removed.</li>
+    </ul>
+    <p class="foot">Sources: <a href="https://techcrunch.com/2025/04/30/pinterest-launches-new-tools-to-fight-ai-slop/">TechCrunch on Pinterest's AI labels</a>, <a href="https://404media.co/pinterest-is-drowning-in-a-sea-of-ai-slop-and-auto-moderation">404 Media on mislabeled human work</a>, <a href="https://www.creativebloq.com/creative-inspiration/the-best-pinterest-alternatives-in-2026">Creative Bloq on Pinterest alternatives</a>. Artwork, makers and trails in this preview are generated examples.</p>
+  </article>
+</section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="d-title"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+// ---------- deterministic art ----------
+function rng(seed){let s=seed>>>0||1;return function(){s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};}
+var PALETTES=[
+  ["#f2e8d5","#1f3a5f","#e07a2f","#6b9080","#2b2b2b"],
+  ["#dfe7ef","#0f4c81","#f2c14e","#d1495b","#14213d"],
+  ["#1b1f2a","#f4d35e","#ee964b","#2a9d8f","#e9ecef"],
+  ["#f6efe9","#b5446e","#3d348b","#7678ed","#f7b801"],
+  ["#e9f1e7","#2d6a4f","#95d5b2","#081c15","#d8572a"],
+  ["#fbf8f1","#264653","#e76f51","#f4a261","#8ab17d"],
+  ["#232931","#4ecca3","#eeeeee","#393e46","#f05454"],
+  ["#f1ece4","#6d597a","#b56576","#e56b6f","#355070"],
+  ["#e8edf2","#003049","#d62828","#f77f00","#fcbf49"],
+  ["#14110f","#d9c5b2","#7e7f83","#34312d","#c1666b"]
+];
+function makeArt(seed){
+  var r=rng(seed),pal=PALETTES[Math.floor(r()*PALETTES.length)],n=5+Math.floor(r()*5),shapes=[];
+  var kinds=["circle","rect","arc","wave","tri","circle"];
+  for(var i=0;i<n;i++){
+    shapes.push({k:kinds[Math.floor(r()*kinds.length)],x:r(),y:r(),s:.12+r()*.42,rot:r()*Math.PI*2,c:pal[1+Math.floor(r()*4)],w:1+Math.floor(r()*3)});
+  }
+  return {pal:pal,shapes:shapes,ratio:[.8,1,1.25,1.4,1.5,1.2][Math.floor(r()*6)],seed:seed};
+}
+function shade(hex,amt){var n=parseInt(hex.slice(1),16),r=(n>>16)+amt,g=((n>>8)&255)+amt,b=(n&255)+amt;
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+  return "#"+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);}
+function pathShape(ctx,sh,W,H,jit){
+  var m=Math.min(W,H),x=sh.x*W,y=sh.y*H,s=sh.s*m,j=jit||0;
+  ctx.save();ctx.translate(x,y);ctx.rotate(sh.rot);ctx.beginPath();
+  if(sh.k==="circle"){ctx.arc(j,j,s/2,0,Math.PI*2);}
+  else if(sh.k==="rect"){ctx.rect(-s/2+j,-s/3,s,s*.66);}
+  else if(sh.k==="tri"){ctx.moveTo(j,-s/2);ctx.lineTo(s/2,s/2+j);ctx.lineTo(-s/2,s/2);ctx.closePath();}
+  else if(sh.k==="arc"){ctx.arc(0,0,s/2,Math.PI,0);ctx.lineTo(s/2-s*.18,0);ctx.arc(0,0,s/2-s*.18,0,Math.PI,true);ctx.closePath();}
+  else {ctx.moveTo(-s,0);for(var t=0;t<=20;t++){var px=-s+t*(2*s/20);ctx.lineTo(px,Math.sin(t/3)*s*.12+j);}ctx.lineTo(s,s*.25);ctx.lineTo(-s,s*.25);ctx.closePath();}
+  ctx.restore();
+}
+// stage 0 sketch, 1 flats, 2 shading, 3 final
+function drawArt(cv,art,stage,cssW){
+  var dpr=Math.min(window.devicePixelRatio||1,2),W=cssW,H=Math.round(cssW*art.ratio);
+  cv.width=W*dpr;cv.height=H*dpr;var ctx=cv.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);
+  var r=rng(art.seed*7+3);
+  if(stage===0){
+    ctx.fillStyle="#f4f2ec";ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle="rgba(40,40,45,.55)";ctx.lineWidth=1;
+    art.shapes.forEach(function(sh){for(var p=0;p<2;p++){pathShape(ctx,sh,W,H,(r()-.5)*4);ctx.stroke();}});
+    ctx.strokeStyle="rgba(40,40,45,.12)";
+    for(var g=0;g<6;g++){ctx.beginPath();ctx.moveTo(0,H*g/6);ctx.lineTo(W,H*g/6+r()*4);ctx.stroke();}
+    return;
+  }
+  ctx.fillStyle=art.pal[0];ctx.fillRect(0,0,W,H);
+  art.shapes.forEach(function(sh){
+    if(stage>=2){ctx.save();ctx.translate(Math.min(W,H)*.02,Math.min(W,H)*.025);ctx.fillStyle="rgba(0,0,0,.18)";pathShape(ctx,sh,W,H);ctx.fill();ctx.restore();}
+    ctx.fillStyle=sh.c;pathShape(ctx,sh,W,H);ctx.fill();
+    if(stage>=2){ctx.save();pathShape(ctx,sh,W,H);ctx.clip();ctx.fillStyle=shade(sh.c,-28);
+      ctx.fillRect(sh.x*W,sh.y*H-Math.min(W,H),W,H*2);ctx.restore();}
+  });
+  if(stage>=3){
+    ctx.strokeStyle=shade(art.pal[0],-60);ctx.globalAlpha=.5;ctx.lineWidth=1.2;
+    for(var i=0;i<5;i++){ctx.beginPath();var y=r()*H;ctx.moveTo(r()*W*.3,y);ctx.bezierCurveTo(W*.4,y+r()*30-15,W*.6,y+r()*30-15,W*(.7+r()*.3),y);ctx.stroke();}
+    ctx.globalAlpha=1;
+    var dots=Math.floor(W*H/90);ctx.fillStyle="rgba(0,0,0,.07)";
+    for(var d=0;d<dots;d++){ctx.fillRect(r()*W,r()*H,1,1);}
+    ctx.fillStyle="rgba(255,255,255,.06)";
+    for(var e=0;e<dots/2;e++){ctx.fillRect(r()*W,r()*H,1,1);}
+  }
+}
+
+// ---------- example data ----------
+var MAKERS={
+  mira:{n:"Mira Okafor",h:"@miraok",c:"#2d6a4f",f:true,open:true},
+  tomas:{n:"Tomás Reyes",h:"@tomasdraws",c:"#b5446e",f:true,open:false},
+  lena:{n:"Lena Haas",h:"@lenahaas",c:"#0f4c81",f:true,open:true},
+  kofi:{n:"Kofi Mensah",h:"@kofi.prints",c:"#d8572a",f:true,open:true},
+  yuki:{n:"Yuki Tanabe",h:"@yukitanabe",c:"#6d597a",f:false,open:false},
+  sam:{n:"Sam Ortiz",h:"@samortiz",c:"#264653",f:false,open:true},
+  ines:{n:"Inês Duarte",h:"@inesd",c:"#c1666b",f:true,open:false},
+  ravi:{n:"Ravi Patel",h:"@ravipaints",c:"#355070",f:false,open:true}
+};
+function initials(n){return n.split(" ").map(function(p){return p[0];}).join("").slice(0,2);}
+var PIECES=[
+  ["Harbour at 6am","mira","Gouache on cold press","nature",true,true,"none",2,"Two hours before the light went flat."],
+  ["Stair study no. 4","tomas","Ink and wash","art",true,false,"none",1,"Fourth go at the same staircase."],
+  ["Kitchen table, Sunday","lena","35mm film, Portra 400","photo",false,true,"none",3,"Shot on a borrowed Olympus."],
+  ["Market crates","kofi","Three-colour linocut","art",true,false,"none",1,"Each colour is a separate block."],
+  ["Night bus","yuki","Procreate","art",true,false,"assist",4,"Background texture cleaned up with an AI fill."],
+  ["Coast road","sam","Digital photo","travel",false,true,"none",0,"Somewhere past the second lighthouse."],
+  ["Orchard plan","ines","Pencil and marker","art",true,false,"none",2,"Planting layout for a community garden."],
+  ["Bread, three ways","ravi","Oil on board","food",true,false,"none",1,"Painted while it was still warm."],
+  ["Signal tower","mira","Gouache","art",true,false,"none",5,"From a sketch made on the train."],
+  ["Afternoon court","lena","35mm film","photo",false,true,"none",2,"Pickup game, no one noticed me."],
+  ["Paper birds","tomas","Cut paper","art",true,false,"none",0,"Photographed on a lightbox."],
+  ["Wall texture study","sam","Phone photo, upscaled","photo",false,false,"assist",1,"Upscaled for print with an AI tool."],
+  ["Seed packets","kofi","Screenprint","art",true,true,"none",3,"Edition of 40."],
+  ["Blue hour","ines","Watercolour","nature",true,false,"none",1,"Painted on site, finished at home."],
+  ["Stall signs","ravi","Acrylic","art",false,false,"none",0,"Hand-lettered for a friend's shop."],
+  ["Late tram","yuki","Procreate","art",true,false,"none",2,"Same city as Night bus."],
+  ["Low tide","mira","Monotype","nature",true,true,"none",4,"Pulled by hand, no press."],
+  ["Workshop corner","lena","Medium format film","photo",false,true,"none",1,"My grandfather's workbench."]
+];
+var now=Date.now();
+var items=PIECES.map(function(p,i){
+  var art=makeArt(1000+i*97);
+  return {id:"p"+i,title:p[0],maker:p[1],medium:p[2],cat:p[3],process:p[4],cred:p[5],ai:p[6],saves:p[7],about:p[8],art:art,
+    edit:[0,3,6,9,12,16].indexOf(i)>-1,posted:now-(i*37+5)*60000};
+});
+var SWATCHES=["#d62828","#e07a2f","#f2c14e","#2d6a4f","#2a9d8f","#0f4c81","#6d597a","#2b2b2b"];
+
+// ---------- helpers ----------
+function $(s,el){return (el||document).querySelector(s);}
+function $$(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s));}
+function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
+function ago(t){var m=Math.round((now-t)/60000);if(m<60)return m+" min ago";var h=Math.round(m/60);return h<24?h+" h ago":Math.round(h/24)+" d ago";}
+function hexRgb(h){var n=parseInt(h.slice(1),16);return [n>>16,(n>>8)&255,n&255];}
+function dist(a,b){var x=hexRgb(a),y=hexRgb(b);return Math.sqrt(Math.pow(x[0]-y[0],2)*.3+Math.pow(x[1]-y[1],2)*.59+Math.pow(x[2]-y[2],2)*.11);}
+function badgesHtml(it){var b="";
+  if(it.process)b+='<span class="badge b-proc"><i></i>Process shown</span>';
+  if(it.cred)b+='<span class="badge b-cred"><i></i>Credentials</span>';
+  if(it.ai==="assist")b+='<span class="badge b-ai"><i></i>AI-assisted</span>';
+  return b;}
+function av(m,size){var k=MAKERS[m];return '<span class="avatar" style="background:'+k.c+';color:#fff'+(size?';width:'+size+'px;height:'+size+'px':'')+'">'+initials(k.n)+'</span>';}
+var toastT;function toast(msg){var t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("on");},2600);}
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem("exedia-"+k));localStorage.setItem("exedia-"+k,JSON.stringify(v));}catch(e){return null;}}
+
+// ---------- discover ----------
+var state={feed:store("feed")||"following",hand:false,noai:false,color:null,q:""};
+function filtered(){
+  var q=state.q.trim().toLowerCase();
+  return items.filter(function(it){
+    var m=MAKERS[it.maker];
+    if(state.feed==="following"&&!m.f)return false;
+    if(state.feed==="edit"&&!it.edit)return false;
+    if(state.hand&&!it.process)return false;
+    if(state.noai&&it.ai!=="none")return false;
+    if(state.color&&!it.art.pal.some(function(c){return dist(c,state.color)<70;}))return false;
+    if(q&&(it.title+" "+m.n+" "+m.h+" "+it.medium+" "+it.cat).toLowerCase().indexOf(q)<0)return false;
+    return true;
+  }).sort(function(a,b){return state.feed==="following"?b.posted-a.posted:0;});
+}
+function tileWidth(){var w=$("#wall").clientWidth||1000;var cols=getComputedStyle($("#wall")).columnCount|0||4;return Math.floor((w-(cols-1)*16)/cols);}
+function renderWall(){
+  var list=filtered(),wall=$("#wall"),w=tileWidth();wall.innerHTML="";
+  list.forEach(function(it){
+    var m=MAKERS[it.maker],b=document.createElement("button");
+    b.type="button";b.className="tile";b.setAttribute("aria-label",it.title+" by "+m.n);
+    b.innerHTML='<canvas aria-hidden="true"></canvas><div class="badges">'+badgesHtml(it)+'</div><div class="meta"><span class="t">'+esc(it.title)+'</span><span class="byline">'+av(it.maker)+esc(m.n)+'</span></div>';
+    drawArt($("canvas",b),it.art,3,w);
+    b.addEventListener("click",function(){openDetail(it.id,b);});
+    wall.appendChild(b);
+  });
+  if(!list.length){wall.innerHTML='<div class="empty" style="column-span:all">Nothing matches those filters. Try another color or turn a filter off.</div>';}
+  else if(state.feed==="following"){
+    var c=document.createElement("div");c.className="caught";
+    c.innerHTML='<h3>You\'re caught up</h3><p>That\'s everything from the '+Object.keys(MAKERS).filter(function(k){return MAKERS[k].f;}).length+' people you follow since yesterday.</p><button type="button" class="btn">See Today\'s edit</button>';
+    $("button",c).addEventListener("click",function(){setFeed("edit");});
+    wall.appendChild(c);
+  }
+  var label={following:"From people you follow, newest first",edit:"Picked by the Exedia editors today",all:"Everything, most saved first"}[state.feed];
+  $("#status").textContent=list.length+(list.length===1?" piece. ":" pieces. ")+label+".";
+}
+function setFeed(f){state.feed=f;store("feed",f);$$("[data-feed]").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.feed===f);});renderWall();}
+$$("[data-feed]").forEach(function(b){b.addEventListener("click",function(){setFeed(b.dataset.feed);});});
+$("#f-hand").addEventListener("click",function(){state.hand=!state.hand;this.setAttribute("aria-pressed",state.hand);renderWall();});
+$("#f-noai").addEventListener("click",function(){state.noai=!state.noai;this.setAttribute("aria-pressed",state.noai);renderWall();});
+SWATCHES.forEach(function(c){var s=document.createElement("button");s.type="button";s.className="sw";s.style.background=c;s.setAttribute("aria-label","Color "+c);s.setAttribute("aria-pressed","false");
+  s.addEventListener("click",function(){setColor(state.color===c?null:c);});$("#swatches").appendChild(s);});
+function setColor(c){state.color=c;$$("#swatches .sw").forEach(function(s){s.setAttribute("aria-pressed",s.style.background&&c&&dist(rgbToHex(s.style.background),c)<1?"true":"false");});renderWall();}
+function rgbToHex(rgb){var m=rgb.match(/\d+/g);if(!m)return rgb;return "#"+m.slice(0,3).map(function(x){return (+x).toString(16).padStart(2,"0");}).join("");}
+var qT;$("#q").addEventListener("input",function(e){clearTimeout(qT);qT=setTimeout(function(){state.q=e.target.value;if(state.q&&state.feed==="following")setFeed("all");else renderWall();if(location.hash!=="#discover"&&state.q)location.hash="discover";},150);});
+
+// ---------- detail ----------
+var lastFocus=null,saved=store("saved")||{};
+function openDetail(id,from){
+  var it=items.find(function(x){return x.id===id;}),m=MAKERS[it.maker],sheet=$("#sheet");lastFocus=from||document.activeElement;
+  var stages=it.process?["Sketch","Flats","Shading","Final"]:["Final"];
+  var chain=['<li><span class="dot"></span><div><b>'+esc(m.n)+'</b> <span class="muted">made it</span><div class="mono muted">'+esc(m.h)+', '+ago(it.posted)+'</div></div></li>'];
+  var savers=["sam","ines","ravi","yuki"].filter(function(k){return k!==it.maker;}).slice(0,Math.min(2,it.saves));
+  savers.forEach(function(k){chain.push('<li><span class="dot"></span><div>'+esc(MAKERS[k].n)+' <span class="muted">saved it to a trail</span></div></li>');});
+  chain.push('<li><span class="dot"></span><div>You <span class="muted">'+(saved[id]?'saved it. Credit stays with '+esc(m.n.split(" ")[0])+'.':'are looking at it now')+'</span></div></li>');
+  var aiNote=it.ai==="assist"?'<div class="proof"><strong><span class="badge b-ai" style="background:none;padding:0"><i></i></span>AI-assisted, declared by the maker</strong><span class="muted">'+esc(it.about)+'</span></div>':"";
+  var cred=it.cred?'<div class="proof"><strong><span class="badge b-cred" style="background:none;padding:0"><i></i></span>Content Credentials found</strong><span class="muted mono">Signed capture, 1 edit recorded, no generative steps</span></div>':'<div class="proof"><strong>No Content Credentials</strong><span class="muted">Most images don\'t carry them yet. That alone says nothing about how it was made.</span></div>';
+  sheet.innerHTML=
+    '<div class="sheet-head"><span class="mono muted">'+esc(it.cat)+'</span><button type="button" class="x" id="d-close" aria-label="Close">&times;</button></div>'+
+    '<div class="sheet-body"><div class="stage"><canvas class="big" id="d-big" aria-label="'+esc(it.title)+'"></canvas>'+
+      (it.process?'<div><div class="mono muted" style="margin-bottom:8px">Process, '+stages.length+' steps from the maker</div><div class="steps" role="group" aria-label="Process steps">'+stages.map(function(s,i){return '<button type="button" class="step" data-st="'+i+'" aria-pressed="'+(i===3)+'"><canvas aria-hidden="true"></canvas><span>'+(i+1)+'. '+s+'</span></button>';}).join("")+'</div></div>':'<p class="muted" style="margin:0;font-size:14px">The maker didn\'t add process shots for this one.</p>')+
+    '</div><div class="info">'+
+      '<div><h2 id="d-title">'+esc(it.title)+'</h2><p class="muted" style="margin:6px 0 0">'+esc(it.about)+'</p></div>'+
+      '<div class="row" style="align-items:center">'+av(it.maker,40)+'<div style="flex:1"><b>'+esc(m.n)+'</b><div class="mono muted">'+esc(m.h)+'</div></div>'+
+        (m.open?'<button type="button" class="btn ink" id="d-msg">Ask about a commission</button>':'<button type="button" class="btn" id="d-follow">'+(m.f?"Following":"Follow")+'</button>')+'</div>'+
+      '<div class="row"><button type="button" class="btn primary" id="d-save">'+(saved[id]?"Saved to Trail":"Save to a trail")+'</button><button type="button" class="btn" id="d-copy">Copy link with credit</button></div>'+
+      '<div class="sect"><h3>Palette</h3><div class="pal">'+it.art.pal.map(function(c){return '<button type="button" style="background:'+c+'" data-c="'+c+'" aria-label="Find work with '+c+'"><span>'+c+'</span></button>';}).join("")+'</div></div>'+
+      '<div class="sect"><h3>How it was made</h3><dl class="facts"><dt>Medium</dt><dd>'+esc(it.medium)+'</dd><dt>AI use</dt><dd>'+(it.ai==="none"?"None declared":"Assisted")+'</dd><dt>Saves</dt><dd>'+it.saves+'</dd></dl></div>'+
+      '<div class="sect"><h3>Proof</h3><div style="display:grid;gap:8px">'+cred+aiNote+'</div></div>'+
+      '<div class="sect"><h3>Credit</h3><ul class="chain">'+chain.join("")+'</ul></div>'+
+    '</div></div>';
+  $("#scrim").classList.add("on");sheet.classList.add("on");document.body.style.overflow="hidden";
+  var stageW=Math.min($(".stage",sheet).clientWidth-36,620);
+  drawArt($("#d-big"),it.art,3,stageW);
+  $$(".step",sheet).forEach(function(b){var i=+b.dataset.st;drawArt($("canvas",b),it.art,i,Math.max(60,(stageW-24)/4));
+    b.addEventListener("click",function(){$$(".step",sheet).forEach(function(x){x.setAttribute("aria-pressed",x===b);});drawArt($("#d-big"),it.art,i,stageW);});});
+  $$(".pal button",sheet).forEach(function(b){b.addEventListener("click",function(){closeDetail();location.hash="discover";if(state.feed==="following")setFeed("all");setColor(b.dataset.c);toast("Showing work with "+b.dataset.c);});});
+  $("#d-close").addEventListener("click",closeDetail);
+  $("#d-save").addEventListener("click",function(){saved[id]=!saved[id];store("saved",saved);this.textContent=saved[id]?"Saved to Trail":"Save to a trail";toast(saved[id]?"Saved to Reference for the café mural. Credit stays with "+m.n+".":"Removed from your trail");});
+  $("#d-copy").addEventListener("click",function(){var txt=it.title+" by "+m.n+" ("+m.h+") on Exedia";
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast("Copied: "+txt);},function(){toast("Copy was blocked here. Text: "+txt);});}else toast(txt);});
+  var msg=$("#d-msg");if(msg)msg.addEventListener("click",function(){toast("This preview can't send messages. In the app this opens a chat with "+m.n+".");});
+  var fol=$("#d-follow");if(fol)fol.addEventListener("click",function(){m.f=!m.f;this.textContent=m.f?"Following":"Follow";renderWall();});
+  $("#d-close").focus();
+}
+function closeDetail(){$("#scrim").classList.remove("on");$("#sheet").classList.remove("on");document.body.style.overflow="";if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+$("#scrim").addEventListener("click",closeDetail);
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("#sheet").classList.contains("on"))closeDetail();});
+
+// ---------- trails ----------
+var TRAILS=[
+  {id:"t1",name:"Reference for the café mural",desc:"Palette and composition ideas for the wall on Rua das Flores. Ines is picking the final colours.",who:["ines","sam"],
+    stops:[[0,"Start with this light","The warm water against the dark hull is the mood we want for the morning side of the wall.","ines"],[13,"Too blue on its own","Good softness, but we'd need a warm accent to tie it to the café sign.","sam"],[3,"Block printing look","What if the mural used flat shapes like a linocut? Easier to paint at scale.","ines"],[7,"Food, but not literal","Ravi's brushwork could inspire the counter section.","sam"]]},
+  {id:"t2",name:"Film photos that feel quiet",desc:"Collecting framing ideas before the zine.",who:["lena"],
+    stops:[[2,"Table as a stage","Everything sits at the same height. Steal this for the cover.","lena"],[9,"Motion without blur","Nobody looks at the camera.","lena"],[17,"Close and personal","Ending the zine here.","lena"]]},
+  {id:"t3",name:"Printmaking techniques",desc:"Things to try in the shared studio this spring.",who:["kofi","tomas","mira"],
+    stops:[[12,"Separate screens","Count the layers before booking studio time.","kofi"],[16,"Monotype without a press","Spoon and baren only. Mira says it took four tries.","mira"],[10,"Cut paper as a stencil","Could pair with the screenprint idea.","tomas"]]}
+];
+var activeTrail=store("trail")||"t1";
+function renderTrails(){
+  var list=$("#trail-list");list.innerHTML='<span class="mono muted">Your trails</span>';
+  TRAILS.forEach(function(t){var b=document.createElement("button");b.type="button";b.className="trail-pick";b.setAttribute("aria-pressed",t.id===activeTrail);
+    b.innerHTML='<b>'+esc(t.name)+'</b><span class="mono muted">'+t.stops.length+' stops, '+(t.who.length+1)+' people</span>';
+    b.addEventListener("click",function(){activeTrail=t.id;store("trail",t.id);renderTrails();});list.appendChild(b);});
+  var nb=document.createElement("button");nb.type="button";nb.className="btn";nb.textContent="Start a new trail";nb.addEventListener("click",function(){toast("New trails are disabled in this preview.");});list.appendChild(nb);
+  var t=TRAILS.find(function(x){return x.id===activeTrail;})||TRAILS[0],body=$("#trail-body");
+  body.innerHTML='<div class="trail-head"><div><span class="mono muted">Trail</span><h2 id="h-trails">'+esc(t.name)+'</h2><p>'+esc(t.desc)+'</p></div><div class="row" style="align-items:center"><div class="stack"><span class="avatar me">AC</span>'+t.who.map(function(k){return av(k);}).join("")+'</div><button type="button" class="btn" id="tr-share">Share trail</button></div></div><div class="path" id="path"></div>';
+  var path=$("#path");
+  t.stops.forEach(function(s,i){var it=items[s[0]],d=document.createElement("div");d.className="stop";
+    d.innerHTML='<span class="n">'+String(i+1).padStart(2,"0")+'</span><canvas role="button" tabindex="0" aria-label="Open '+esc(it.title)+'"></canvas><div class="note"><h4>'+esc(s[1])+'</h4><p>'+esc(s[2])+'</p><div class="who mono muted">Note by '+esc(MAKERS[s[3]].n)+'. Work by '+esc(MAKERS[it.maker].n)+'.</div></div>';
+    path.appendChild(d);var cv=$("canvas",d);drawArt(cv,it.art,3,200);
+    cv.addEventListener("click",function(){openDetail(it.id,cv);});cv.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openDetail(it.id,cv);}});});
+  $("#tr-share").addEventListener("click",function(){toast("In the app this makes a public link. Every piece keeps its maker's credit.");});
+}
+
+// ---------- share ----------
+var form=$("#post-form"),steps=0,hasImg=false;
+function updatePreview(){
+  var title=$("#p-title").value.trim()||"Untitled",ai=form.ai.value,own=form.own.value;
+  $("#pv-title").textContent=title;$("#src-wrap").hidden=own!=="other";
+  var b="";if(steps>0)b+='<span class="badge b-proc"><i></i>Process shown</span>';if(ai==="assist")b+='<span class="badge b-ai"><i></i>AI-assisted</span>';
+  $("#pv-badges").innerHTML=b;
+  var checks=[[hasImg,"Finished image added"],[$("#p-title").value.trim().length>0,"Title added"],[steps>0,"Process shots added ("+steps+")"],[$("#p-medium").value.trim().length>0,"Medium described"],[own==="me"||/^https?:\/\/.+/.test($("#p-src").value),own==="me"?"Credited to you":"Source link for the original maker"]];
+  $("#pv-checks").innerHTML=checks.map(function(c){return '<li class="'+(c[0]?"done":"")+'">'+esc(c[1])+'</li>';}).join("")+(ai==="gen"?'<li style="color:var(--stamp)">Mostly generated work can\'t be posted publicly.</li>':"");
+}
+$("#p-file").addEventListener("change",function(){var f=this.files[0],box=$("#pv-img");if(!f){hasImg=false;box.textContent="Your image shows here";updatePreview();return;}
+  hasImg=true;var url=URL.createObjectURL(f);box.innerHTML='<img alt="Preview of your upload" src="'+url+'">';updatePreview();});
+$("#p-steps").addEventListener("change",function(){var fs=Array.prototype.slice.call(this.files,0,6);steps=fs.length;
+  $("#p-thumbs").innerHTML=fs.map(function(f,i){return '<img alt="Process shot '+(i+1)+'" src="'+URL.createObjectURL(f)+'">';}).join("");updatePreview();});
+form.addEventListener("input",updatePreview);form.addEventListener("change",updatePreview);
+form.addEventListener("reset",function(){setTimeout(function(){steps=0;hasImg=false;$("#p-thumbs").innerHTML="";$("#pv-img").textContent="Your image shows here";$("#post-msg").textContent="";updatePreview();},0);});
+form.addEventListener("submit",function(e){e.preventDefault();var msg=$("#post-msg");
+  if(form.ai.value==="gen"){msg.textContent="This one can't go on the public wall. Choose None or Assisted if you made it yourself.";return;}
+  if(!hasImg){msg.textContent="Add the finished image first.";$("#p-file").focus();return;}
+  if(form.own.value==="other"&&!/^https?:\/\/.+/.test($("#p-src").value)){msg.textContent="Add a link to where the original lives so the maker gets credit.";$("#p-src").focus();return;}
+  msg.textContent="Looks good. This is a preview, so nothing was uploaded.";toast("Preview only. Nothing was uploaded.");});
+
+// ---------- routing ----------
+var VIEWS=["discover","trails","share","plan"];
+function route(){var v=location.hash.replace("#","");if(VIEWS.indexOf(v)<0)v="discover";
+  VIEWS.forEach(function(x){$("#v-"+x).classList.toggle("on",x===v);});
+  $$(".nav a").forEach(function(a){if(a.dataset.view===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
+  if(v==="discover")renderWall();if(v==="trails")renderTrails();if(v==="share")updatePreview();
+  if($("#sheet").classList.contains("on"))closeDetail();window.scrollTo(0,0);}
+window.addEventListener("hashchange",route);
+var rT;window.addEventListener("resize",function(){clearTimeout(rT);rT=setTimeout(function(){if($("#v-discover").classList.contains("on"))renderWall();},200);});
+setFeed(state.feed);route();
+})();
+</script>
+</body>
+</html>
